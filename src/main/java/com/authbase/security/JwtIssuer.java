@@ -26,7 +26,7 @@ public class JwtIssuer {
                 .upn(user.email)
                 .groups(Set.of(user.role.name()))
                 .claim("email", user.email)
-                .claim("name", user.fullName)
+                .claim("name", user.displayName())
                 .issuedAt(now)
                 .expiresAt(now.plus(ttl))
                 .signWithSecret(properties.jwtSecret());

@@ -1,5 +1,6 @@
 package com.authbase.domain;
 
+import com.authbase.helpers.Names;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,6 +12,7 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -28,8 +30,35 @@ public class User extends PanacheEntityBase {
     @Column(name = "password_hash", nullable = false)
     public String passwordHash;
 
-    @Column(name = "full_name", nullable = false, length = 120)
+    @Column(name = "first_name", length = 80)
+    public String firstName;
+
+    @Column(name = "last_name", length = 80)
+    public String lastName;
+
+    @Column(name = "full_name", nullable = false, length = 160)
     public String fullName;
+
+    @Column(name = "document_number", length = 20)
+    public String documentNumber;
+
+    @Column(name = "phone", length = 30)
+    public String phone;
+
+    @Column(name = "birth_date")
+    public LocalDate birthDate;
+
+    @Column(name = "street", length = 160)
+    public String street;
+
+    @Column(name = "city", length = 80)
+    public String city;
+
+    @Column(name = "province", length = 80)
+    public String province;
+
+    @Column(name = "postal_code", length = 20)
+    public String postalCode;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 32)
@@ -62,12 +91,25 @@ public class User extends PanacheEntityBase {
         createdAt = now;
         updatedAt = now;
         email = normalizeEmail(email);
+        syncLegacyFullName();
     }
 
     @PreUpdate
     void onUpdate() {
         updatedAt = Instant.now();
         email = normalizeEmail(email);
+        syncLegacyFullName();
+    }
+
+    public String displayName() {
+        return Names.display(firstName, lastName);
+    }
+
+    private void syncLegacyFullName() {
+        String display = displayName();
+        if (!display.isBlank()) {
+            fullName = display;
+        }
     }
 
     public boolean isLocked(Instant now) {

@@ -5,11 +5,13 @@ import com.authbase.api.dto.ChangePasswordRequest;
 import com.authbase.api.dto.LoginRequest;
 import com.authbase.api.dto.RefreshRequest;
 import com.authbase.api.dto.RegisterRequest;
+import com.authbase.api.dto.UpdateProfileRequest;
 import com.authbase.api.dto.UserResponse;
 import com.authbase.config.AuthProperties;
 import com.authbase.domain.RefreshToken;
 import com.authbase.domain.Role;
 import com.authbase.domain.User;
+import com.authbase.helpers.UserProfiles;
 import com.authbase.error.ApiException;
 import com.authbase.security.JwtIssuer;
 import com.authbase.security.PasswordHasher;
@@ -54,9 +56,20 @@ public class AuthService {
 
         User user = new User();
         user.email = email;
-        user.fullName = request.fullName().trim();
+        user.firstName = request.firstName().trim();
+        user.lastName = request.lastName().trim();
         user.passwordHash = passwordHasher.hash(request.password());
         user.role = Role.USER;
+        UserProfiles.set(
+                user,
+                request.documentNumber(),
+                request.phone(),
+                request.birthDate(),
+                request.street(),
+                request.city(),
+                request.province(),
+                request.postalCode()
+        );
         user.persist();
 
         return issueSession(user);
@@ -130,6 +143,28 @@ public class AuthService {
 
     public UserResponse me(String userId) {
         User user = requireUser(userId);
+        return UserResponse.from(user);
+    }
+
+    @Transactional
+    public UserResponse updateProfile(String userId, UpdateProfileRequest request) {
+        User user = requireUser(userId);
+        if (request.firstName() != null) {
+            user.firstName = request.firstName().trim();
+        }
+        if (request.lastName() != null) {
+            user.lastName = request.lastName().trim();
+        }
+        UserProfiles.set(
+                user,
+                request.documentNumber(),
+                request.phone(),
+                request.birthDate(),
+                request.street(),
+                request.city(),
+                request.province(),
+                request.postalCode()
+        );
         return UserResponse.from(user);
     }
 

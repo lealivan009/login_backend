@@ -21,7 +21,8 @@ class AuthResourceTest {
                         {
                           "email": "%s",
                           "password": "Secret123",
-                          "fullName": "Usuario Demo"
+                          "firstName": "Usuario",
+                          "lastName": "Demo"
                         }
                         """.formatted(email))
                 .when()
@@ -46,7 +47,8 @@ class AuthResourceTest {
                 .post("/api/auth/login")
                 .then()
                 .statusCode(200)
-                .body("user.fullName", equalTo("Usuario Demo"));
+                .body("user.firstName", equalTo("Usuario"))
+                .body("user.lastName", equalTo("Demo"));
 
         given()
                 .header("Authorization", "Bearer " + accessToken)
@@ -55,6 +57,61 @@ class AuthResourceTest {
                 .then()
                 .statusCode(200)
                 .body("email", equalTo(email));
+    }
+
+    @Test
+    void registerAndUpdateProfile() {
+        String email = "profile-" + System.nanoTime() + "@example.com";
+
+        String accessToken = given()
+                .contentType(ContentType.JSON)
+                .body("""
+                        {
+                          "email": "%s",
+                          "password": "Secret123",
+                          "firstName": "Ana",
+                          "lastName": "Perez",
+                          "documentNumber": "30111222",
+                          "phone": "1144445555",
+                          "birthDate": "1994-05-20",
+                          "street": "Av. Corrientes 1234",
+                          "city": "CABA",
+                          "province": "Buenos Aires",
+                          "postalCode": "1043"
+                        }
+                        """.formatted(email))
+                .when()
+                .post("/api/auth/register")
+                .then()
+                .statusCode(200)
+                .body("user.phone", equalTo("1144445555"))
+                .body("user.city", equalTo("CABA"))
+                .extract()
+                .path("accessToken");
+
+        given()
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(ContentType.JSON)
+                .body("""
+                        {
+                          "firstName": "Ana",
+                          "lastName": "Perez",
+                          "documentNumber": "30111222",
+                          "phone": "1199990000",
+                          "birthDate": "1994-05-20",
+                          "street": "Calle Falsa 123",
+                          "city": "Rosario",
+                          "province": "Santa Fe",
+                          "postalCode": "2000"
+                        }
+                        """)
+                .when()
+                .patch("/api/auth/me")
+                .then()
+                .statusCode(200)
+                .body("phone", equalTo("1199990000"))
+                .body("street", equalTo("Calle Falsa 123"))
+                .body("city", equalTo("Rosario"));
     }
 
     @Test
@@ -82,7 +139,8 @@ class AuthResourceTest {
                         {
                           "email": "weak@example.com",
                           "password": "password",
-                          "fullName": "Usuario Demo"
+                          "firstName": "Usuario",
+                          "lastName": "Demo"
                         }
                         """)
                 .when()

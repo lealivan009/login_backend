@@ -6,6 +6,7 @@ import com.authbase.api.dto.LoginRequest;
 import com.authbase.api.dto.MessageResponse;
 import com.authbase.api.dto.RefreshRequest;
 import com.authbase.api.dto.RegisterRequest;
+import com.authbase.api.dto.UpdateProfileRequest;
 import com.authbase.api.dto.UserResponse;
 import com.authbase.service.AuthService;
 import io.quarkus.security.Authenticated;
@@ -13,6 +14,7 @@ import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
@@ -72,6 +74,14 @@ public class AuthResource {
     @Operation(summary = "Usuario autenticado")
     public UserResponse me() {
         return authService.me(currentUserId());
+    }
+
+    @PATCH
+    @Path("/me")
+    @Authenticated
+    @Operation(summary = "Actualizar datos personales")
+    public UserResponse updateProfile(@Valid UpdateProfileRequest request) {
+        return authService.updateProfile(currentUserId(), request);
     }
 
     @POST

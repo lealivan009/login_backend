@@ -1,6 +1,7 @@
 package com.authbase.service;
 
 import com.authbase.config.AuthProperties;
+import com.authbase.helpers.Names;
 import com.authbase.domain.Role;
 import com.authbase.domain.User;
 import com.authbase.security.PasswordHasher;
@@ -39,7 +40,12 @@ public class AdminBootstrap {
         passwordPolicy.validate(password);
         User admin = new User();
         admin.email = User.normalizeEmail(email);
-        admin.fullName = properties.bootstrapAdminName();
+        String[] parts = Names.split(properties.bootstrapAdminName());
+        admin.firstName = parts[0].isBlank() ? "Administrador" : parts[0];
+        String lastName = properties.bootstrapAdminLastName();
+        admin.lastName = lastName == null || lastName.isBlank()
+                ? (parts[1].isBlank() ? "Admin" : parts[1])
+                : lastName.trim();
         admin.passwordHash = passwordHasher.hash(password);
         admin.role = Role.ADMIN;
         admin.persist();

@@ -33,4 +33,7 @@ public interface AuthProperties {
 
     @WithDefault("Administrador")
     String bootstrapAdminName();
+
+    @WithDefault("Admin")
+    String bootstrapAdminLastName();
 }

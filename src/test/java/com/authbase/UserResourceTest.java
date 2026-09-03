@@ -72,6 +72,35 @@ class UserResourceTest {
 
         given()
                 .header("Authorization", "Bearer " + adminToken)
+                .when()
+                .get("/api/users/" + userId)
+                .then()
+                .statusCode(200)
+                .body("id", equalTo(userId))
+                .body("email", equalTo(email))
+                .body("firstName", equalTo("Usuario"));
+
+        given()
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(ContentType.JSON)
+                .body("""
+                        {
+                          "firstName": "Usuario",
+                          "lastName": "Editado",
+                          "phone": "111222333",
+                          "city": "Córdoba"
+                        }
+                        """)
+                .when()
+                .patch("/api/users/" + userId)
+                .then()
+                .statusCode(200)
+                .body("lastName", equalTo("Editado"))
+                .body("phone", equalTo("111222333"))
+                .body("city", equalTo("Córdoba"));
+
+        given()
+                .header("Authorization", "Bearer " + adminToken)
                 .contentType(ContentType.JSON)
                 .body("""
                         {
@@ -84,7 +113,8 @@ class UserResourceTest {
                 .then()
                 .statusCode(200)
                 .body("role", equalTo("ADMIN"))
-                .body("enabled", equalTo(false));
+                .body("enabled", equalTo(false))
+                .body("phone", equalTo("111222333"));
 
         given()
                 .header("Authorization", "Bearer " + adminToken)
@@ -97,10 +127,30 @@ class UserResourceTest {
         given()
                 .header("Authorization", "Bearer " + adminToken)
                 .when()
+                .get("/api/users/" + userId)
+                .then()
+                .statusCode(404);
+
+        given()
+                .header("Authorization", "Bearer " + adminToken)
+                .when()
                 .get("/api/users")
                 .then()
                 .statusCode(200)
                 .body("email", not(hasItem(email)));
+
+        given()
+                .contentType(ContentType.JSON)
+                .body("""
+                        {
+                          "email": "%s",
+                          "password": "Secret123"
+                        }
+                        """.formatted(email))
+                .when()
+                .post("/api/auth/login")
+                .then()
+                .statusCode(401);
     }
 
     @Test

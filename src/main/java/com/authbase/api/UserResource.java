@@ -43,6 +43,13 @@ public class UserResource {
         return userService.list();
     }
 
+    @GET
+    @Path("/{id}")
+    @Operation(summary = "Detalle de usuario")
+    public UserResponse get(@PathParam("id") String id) {
+        return userService.get(id);
+    }
+
     @POST
     @Operation(summary = "Crear usuario")
     public UserResponse create(@Valid CreateUserRequest request) {

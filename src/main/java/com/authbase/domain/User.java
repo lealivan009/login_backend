@@ -82,6 +82,9 @@ public class User extends PanacheEntityBase {
     @Column(name = "updated_at", nullable = false)
     public Instant updatedAt;
 
+    @Column(name = "deleted_at")
+    public Instant deletedAt;
+
     @PrePersist
     void onCreate() {
         if (id == null) {
@@ -112,12 +115,20 @@ public class User extends PanacheEntityBase {
         }
     }
 
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
+
     public boolean isLocked(Instant now) {
         return lockedUntil != null && lockedUntil.isAfter(now);
     }
 
     public static Optional<User> findByEmail(String email) {
-        return find("email", normalizeEmail(email)).firstResultOptional();
+        return find("email = ?1 and deletedAt is null", normalizeEmail(email)).firstResultOptional();
+    }
+
+    public static Optional<User> findActiveById(String id) {
+        return find("id = ?1 and deletedAt is null", id).firstResultOptional();
     }
 
     public static String normalizeEmail(String email) {

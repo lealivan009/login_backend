@@ -118,7 +118,7 @@ public class AuthService {
         }
 
         User user = stored.user;
-        if (!user.enabled) {
+        if (user.isDeleted() || !user.enabled) {
             stored.revoked = true;
             throw ApiException.forbidden("ACCOUNT_DISABLED", "La cuenta está deshabilitada");
         }
@@ -183,7 +183,7 @@ public class AuthService {
     }
 
     private User requireUser(String userId) {
-        User user = User.findById(userId);
+        User user = User.findActiveById(userId).orElse(null);
         if (user == null || !user.enabled) {
             throw ApiException.unauthorized("UNAUTHORIZED", "Sesión inválida");
         }

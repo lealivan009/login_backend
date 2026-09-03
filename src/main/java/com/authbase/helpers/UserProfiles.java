@@ -34,38 +34,4 @@ public final class UserProfiles {
         user.province = clean(province);
         user.postalCode = clean(postalCode);
     }
-
-    public static void patch(
-            User user,
-            String documentNumber,
-            String phone,
-            LocalDate birthDate,
-            String street,
-            String city,
-            String province,
-            String postalCode
-    ) {
-        if (documentNumber != null) {
-            user.documentNumber = clean(documentNumber);
-        }
-        if (phone != null) {
-            user.phone = clean(phone);
-        }
-        if (birthDate != null) {
-            user.birthDate = birthDate;
-        }
-        if (street != null) {
-            user.street = clean(street);
-        }
-        if (city != null) {
-            user.city = clean(city);
-        }
-        if (province != null) {
-            user.province = clean(province);
-        }
-        if (postalCode != null) {
-            user.postalCode = clean(postalCode);
-        }
-    }
 }
-

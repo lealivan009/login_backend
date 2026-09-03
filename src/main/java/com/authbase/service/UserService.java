@@ -13,6 +13,7 @@ import com.authbase.security.PasswordPolicy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 
 @ApplicationScoped
@@ -27,9 +28,13 @@ public class UserService {
     }
 
     public List<UserResponse> list() {
-        return User.<User>find("ORDER BY createdAt DESC").list().stream()
+        return User.<User>find("deletedAt is null ORDER BY createdAt DESC").list().stream()
                 .map(UserResponse::from)
                 .toList();
+    }
+
+    public UserResponse get(String id) {
+        return UserResponse.from(requireUser(id));
     }
 
     @Transactional
@@ -64,22 +69,26 @@ public class UserService {
         User user = requireUser(id);
         boolean self = user.id.equals(actorId);
 
-        if (request.firstName() != null) {
-            user.firstName = request.firstName().trim();
+        boolean editingProfile = request.firstName() != null || request.lastName() != null;
+        if (editingProfile) {
+            if (request.firstName() != null) {
+                user.firstName = request.firstName().trim();
+            }
+            if (request.lastName() != null) {
+                user.lastName = request.lastName().trim();
+            }
+            // Full profile save: blank values clear the field (admin ficha / detalle).
+            UserProfiles.set(
+                    user,
+                    request.documentNumber(),
+                    request.phone(),
+                    request.birthDate(),
+                    request.street(),
+                    request.city(),
+                    request.province(),
+                    request.postalCode()
+            );
         }
-        if (request.lastName() != null) {
-            user.lastName = request.lastName().trim();
-        }
-        UserProfiles.patch(
-                user,
-                request.documentNumber(),
-                request.phone(),
-                request.birthDate(),
-                request.street(),
-                request.city(),
-                request.province(),
-                request.postalCode()
-        );
         if (request.role() != null && request.role() != user.role) {
             if (self) {
                 throw ApiException.badRequest("CANNOT_CHANGE_OWN_ROLE", "No podés cambiar tu propio rol");
@@ -114,19 +123,22 @@ public class UserService {
         if (user.role == Role.ADMIN && adminCount() <= 1) {
             throw ApiException.badRequest("LAST_ADMIN", "Tiene que quedar al menos un administrador");
         }
-        RefreshToken.delete("user", user);
-        user.delete();
+        // Soft delete: keep the row for FK integrity with future related tables.
+        // Free the unique email so the address can be registered again.
+        String originalEmail = user.email;
+        String tagged = "deleted." + user.id + "." + originalEmail;
+        user.deletedAt = Instant.now();
+        user.enabled = false;
+        user.email = tagged.length() <= 255 ? tagged : ("deleted." + user.id);
+        RefreshToken.revokeAllForUser(user);
     }
 
     private User requireUser(String id) {
-        User user = User.findById(id);
-        if (user == null) {
-            throw ApiException.notFound("USER_NOT_FOUND", "No se encontró el usuario");
-        }
-        return user;
+        return User.findActiveById(id)
+                .orElseThrow(() -> ApiException.notFound("USER_NOT_FOUND", "No se encontró el usuario"));
     }
 
     private long adminCount() {
-        return User.count("role", Role.ADMIN);
+        return User.count("role = ?1 and deletedAt is null", Role.ADMIN);
     }
 }

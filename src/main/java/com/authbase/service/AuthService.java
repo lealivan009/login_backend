@@ -101,8 +101,9 @@ public class AuthService {
         }
         if (!passwordHasher.matches(request.password(), user.passwordHash)) {
             user.failedLoginAttempts += 1;
-            if (user.failedLoginAttempts >= properties.maxFailedAttempts()) {
-                user.lockedUntil = now.plus(properties.lockDuration());
+            var settings = settingsService.current();
+            if (user.failedLoginAttempts >= settings.maxFailedAttempts) {
+                user.lockedUntil = now.plus(java.time.Duration.ofMinutes(settings.lockDurationMinutes));
                 user.failedLoginAttempts = 0;
             }
             throw invalidCredentials();

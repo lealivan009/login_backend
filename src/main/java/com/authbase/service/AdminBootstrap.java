@@ -7,8 +7,10 @@ import com.authbase.domain.User;
 import com.authbase.security.PasswordHasher;
 import com.authbase.security.PasswordPolicy;
 import io.quarkus.runtime.StartupEvent;
+import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
+import jakarta.interceptor.Interceptor;
 import jakarta.transaction.Transactional;
 import org.jboss.logging.Logger;
 
@@ -28,7 +30,7 @@ public class AdminBootstrap {
     }
 
     @Transactional
-    void onStart(@Observes StartupEvent event) {
+    void onStart(@Observes @Priority(Interceptor.Priority.PLATFORM_BEFORE + 40) StartupEvent event) {
         String email = properties.bootstrapAdminEmail();
         String password = properties.bootstrapAdminPassword();
         if (email == null || email.isBlank() || password == null || password.isBlank()) {

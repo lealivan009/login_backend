@@ -23,6 +23,27 @@ public class AppSettings extends PanacheEntityBase {
     @Column(name = "allow_public_registration", nullable = false)
     public boolean allowPublicRegistration = true;
 
+    @Column(name = "max_failed_attempts", nullable = false)
+    public int maxFailedAttempts = 5;
+
+    @Column(name = "lock_duration_minutes", nullable = false)
+    public int lockDurationMinutes = 15;
+
+    @Column(name = "password_min_length", nullable = false)
+    public int passwordMinLength = 8;
+
+    @Column(name = "password_max_length", nullable = false)
+    public int passwordMaxLength = 72;
+
+    @Column(name = "password_require_uppercase", nullable = false)
+    public boolean passwordRequireUppercase = true;
+
+    @Column(name = "password_require_lowercase", nullable = false)
+    public boolean passwordRequireLowercase = true;
+
+    @Column(name = "password_require_digit", nullable = false)
+    public boolean passwordRequireDigit = true;
+
     @Column(name = "updated_at", nullable = false)
     public Instant updatedAt;
 
@@ -31,12 +52,32 @@ public class AppSettings extends PanacheEntityBase {
         if (id == null || id.isBlank()) {
             id = DEFAULT_ID;
         }
+        applyDefaultsIfNeeded();
         updatedAt = Instant.now();
     }
 
     @PreUpdate
     void onUpdate() {
         updatedAt = Instant.now();
+    }
+
+    public void applyDefaultsIfNeeded() {
+        if (maxFailedAttempts < 1) {
+            maxFailedAttempts = 5;
+        }
+        if (lockDurationMinutes < 1) {
+            lockDurationMinutes = 15;
+        }
+        if (passwordMinLength < 1) {
+            passwordMinLength = 8;
+            passwordMaxLength = 72;
+            passwordRequireUppercase = true;
+            passwordRequireLowercase = true;
+            passwordRequireDigit = true;
+        }
+        if (passwordMaxLength < passwordMinLength) {
+            passwordMaxLength = Math.max(passwordMinLength, 72);
+        }
     }
 
     public static AppSettings current() {

@@ -2,12 +2,15 @@ package com.authbase.service;
 
 import com.authbase.api.dto.AuthResponse;
 import com.authbase.api.dto.ChangePasswordRequest;
+import com.authbase.api.dto.ForgotPasswordRequest;
 import com.authbase.api.dto.LoginRequest;
 import com.authbase.api.dto.RefreshRequest;
 import com.authbase.api.dto.RegisterRequest;
+import com.authbase.api.dto.ResetPasswordRequest;
 import com.authbase.api.dto.UpdateProfileRequest;
 import com.authbase.api.dto.UserResponse;
 import com.authbase.config.AuthProperties;
+import com.authbase.domain.PasswordResetToken;
 import com.authbase.domain.RefreshToken;
 import com.authbase.domain.Role;
 import com.authbase.domain.User;
@@ -25,12 +28,16 @@ import java.time.Instant;
 @ApplicationScoped
 public class AuthService {
 
+    private static final String FORGOT_PASSWORD_MESSAGE =
+            "Si el email está registrado, te enviamos un enlace para restablecer la contraseña.";
+
     private final AuthProperties properties;
     private final PasswordHasher passwordHasher;
     private final PasswordPolicy passwordPolicy;
     private final TokenService tokenService;
     private final JwtIssuer jwtIssuer;
     private final SettingsService settingsService;
+    private final MailService mailService;
 
     public AuthService(
             AuthProperties properties,
@@ -38,7 +45,8 @@ public class AuthService {
             PasswordPolicy passwordPolicy,
             TokenService tokenService,
             JwtIssuer jwtIssuer,
-            SettingsService settingsService
+            SettingsService settingsService,
+            MailService mailService
     ) {
         this.properties = properties;
         this.passwordHasher = passwordHasher;
@@ -46,6 +54,7 @@ public class AuthService {
         this.tokenService = tokenService;
         this.jwtIssuer = jwtIssuer;
         this.settingsService = settingsService;
+        this.mailService = mailService;
     }
 
     @Transactional
@@ -189,6 +198,53 @@ public class AuthService {
             throw ApiException.badRequest("PASSWORD_REUSED", "La nueva contraseña debe ser distinta a la actual");
         }
         user.passwordHash = passwordHasher.hash(request.newPassword());
+        RefreshToken.revokeAllForUser(user);
+    }
+
+    @Transactional
+    public String forgotPassword(ForgotPasswordRequest request) {
+        User user = User.findByEmail(request.email()).orElse(null);
+        if (user == null || !user.enabled) {
+            return FORGOT_PASSWORD_MESSAGE;
+        }
+
+        PasswordResetToken.invalidateAllForUser(user);
+
+        String rawToken = tokenService.newRefreshToken();
+        PasswordResetToken stored = new PasswordResetToken();
+        stored.user = user;
+        stored.tokenHash = tokenService.hash(rawToken);
+        stored.expiresAt = Instant.now().plus(properties.passwordResetTokenTtl());
+        stored.persist();
+
+        mailService.sendPasswordReset(user.email, rawToken);
+        return FORGOT_PASSWORD_MESSAGE;
+    }
+
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        Instant now = Instant.now();
+        String hash = tokenService.hash(request.token());
+        PasswordResetToken stored = PasswordResetToken.findActiveByHash(hash)
+                .orElseThrow(() -> ApiException.badRequest("INVALID_RESET_TOKEN", "El enlace no es válido o ya fue usado"));
+
+        if (!stored.isActive(now)) {
+            stored.used = true;
+            throw ApiException.badRequest("INVALID_RESET_TOKEN", "El enlace expiró. Pedí uno nuevo.");
+        }
+
+        User user = stored.user;
+        if (user.isDeleted() || !user.enabled) {
+            stored.used = true;
+            throw ApiException.forbidden("ACCOUNT_DISABLED", "La cuenta está deshabilitada");
+        }
+
+        passwordPolicy.validate(request.newPassword());
+        user.passwordHash = passwordHasher.hash(request.newPassword());
+        user.failedLoginAttempts = 0;
+        user.lockedUntil = null;
+        stored.used = true;
+        PasswordResetToken.invalidateAllForUser(user);
         RefreshToken.revokeAllForUser(user);
     }
 

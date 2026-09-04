@@ -149,4 +149,37 @@ class AuthResourceTest {
                 .statusCode(400)
                 .body("error", equalTo("WEAK_PASSWORD"));
     }
+
+    @Test
+    void forgotPasswordAlwaysReturnsGenericMessage() {
+        given()
+                .contentType(ContentType.JSON)
+                .body("""
+                        {
+                          "email": "missing-%s@example.com"
+                        }
+                        """.formatted(System.nanoTime()))
+                .when()
+                .post("/api/auth/forgot-password")
+                .then()
+                .statusCode(200)
+                .body("message", equalTo("Si el email está registrado, te enviamos un enlace para restablecer la contraseña."));
+    }
+
+    @Test
+    void resetPasswordRejectsInvalidToken() {
+        given()
+                .contentType(ContentType.JSON)
+                .body("""
+                        {
+                          "token": "0123456789abcdef0123456789abcdef",
+                          "newPassword": "Secret123"
+                        }
+                        """)
+                .when()
+                .post("/api/auth/reset-password")
+                .then()
+                .statusCode(400)
+                .body("error", equalTo("INVALID_RESET_TOKEN"));
+    }
 }

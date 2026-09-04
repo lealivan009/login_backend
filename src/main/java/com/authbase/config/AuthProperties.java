@@ -36,4 +36,10 @@ public interface AuthProperties {
 
     @WithDefault("Admin")
     String bootstrapAdminLastName();
+
+    @WithDefault("PT30M")
+    Duration passwordResetTokenTtl();
+
+    @WithDefault("http://localhost:5173")
+    String frontendUrl();
 }

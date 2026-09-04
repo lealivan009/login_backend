@@ -2,10 +2,12 @@ package com.authbase.api;
 
 import com.authbase.api.dto.AuthResponse;
 import com.authbase.api.dto.ChangePasswordRequest;
+import com.authbase.api.dto.ForgotPasswordRequest;
 import com.authbase.api.dto.LoginRequest;
 import com.authbase.api.dto.MessageResponse;
 import com.authbase.api.dto.RefreshRequest;
 import com.authbase.api.dto.RegisterRequest;
+import com.authbase.api.dto.ResetPasswordRequest;
 import com.authbase.api.dto.UpdateProfileRequest;
 import com.authbase.api.dto.UserResponse;
 import com.authbase.service.AuthService;
@@ -66,6 +68,21 @@ public class AuthResource {
     public MessageResponse logout(@Valid RefreshRequest request) {
         authService.logout(request);
         return new MessageResponse("Sesión cerrada");
+    }
+
+    @POST
+    @Path("/forgot-password")
+    @Operation(summary = "Pedir enlace de restablecimiento por email")
+    public MessageResponse forgotPassword(@Valid ForgotPasswordRequest request) {
+        return new MessageResponse(authService.forgotPassword(request));
+    }
+
+    @POST
+    @Path("/reset-password")
+    @Operation(summary = "Restablecer contraseña con token del email")
+    public MessageResponse resetPassword(@Valid ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return new MessageResponse("Contraseña actualizada. Ya podés iniciar sesión.");
     }
 
     @GET

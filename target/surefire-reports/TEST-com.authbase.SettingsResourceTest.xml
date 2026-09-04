@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="com.authbase.AuthResourceTest" time="5.52" tests="4" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="com.authbase.SettingsResourceTest" time="0.204" tests="2" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="21"/>
     <property name="sun.cpu.isalist" value="amd64"/>
@@ -76,31 +76,6 @@
     <property name="io.netty.machineId" value="f0:51:b3:1e:88:65:f9:68"/>
     <property name="java.class.version" value="65.0"/>
   </properties>
-  <testcase name="loginRejectsBadPassword" classname="com.authbase.AuthResourceTest" time="1.793">
-    <system-out><![CDATA[2026-09-04 11:35:32,869 INFO  [org.hib.jpa.int.uti.LogHelper] (main) HHH000204: Processing PersistenceUnitInfo [name: <default>]
-2026-09-04 11:35:33,047 INFO  [org.hib.Version] (main) HHH000412: Hibernate ORM core version 7.1.0.Final
-2026-09-04 11:35:33,326 INFO  [org.hib.orm.con.pooling] (main) HHH10001005: Database info:
-	Database JDBC URL [undefined/unknown]
-	Database driver: undefined/unknown
-	Database dialect: H2Dialect
-	Database version: 2.3.230
-	Default catalog/schema: unknown/unknown
-	Autocommit mode: undefined/unknown
-	Isolation level: <unknown>
-	JDBC fetch size: undefined/unknown
-	Pool: undefined/unknown
-	Minimum pool size: undefined/unknown
-	Maximum pool size: undefined/unknown
-2026-09-04 11:35:33,488 INFO  [org.hib.val.int.uti.Version] (main) HV000001: Hibernate Validator 9.0.1.Final
-2026-09-04 11:35:34,979 WARN  [com.aut.sec.JwtSecretGuard] (main) Usando JWT_SECRET de desarrollo. Cambialo antes de desplegar.
-2026-09-04 11:35:35,093 INFO  [com.aut.ser.SettingsBootstrap] (main) Configuraci�n general inicial creada (registro p�blico habilitado)
-2026-09-04 11:35:35,502 INFO  [com.aut.ser.AdminBootstrap] (main) Usuario administrador inicial creado: admin@example.com
-2026-09-04 11:35:35,594 INFO  [io.quarkus] (main) auth-api 1.0.0 on JVM (powered by Quarkus 3.27.0) started in 7.038s. Listening on: http://0.0.0.0:8081
-2026-09-04 11:35:35,594 INFO  [io.quarkus] (main) Profile test activated. 
-2026-09-04 11:35:35,595 INFO  [io.quarkus] (main) Installed features: [agroal, cdi, hibernate-orm, hibernate-orm-panache, hibernate-validator, jdbc-h2, jdbc-mysql, narayana-jta, rest, rest-jackson, security, smallrye-context-propagation, smallrye-health, smallrye-jwt, smallrye-openapi, swagger-ui, vertx]
-]]></system-out>
-  </testcase>
-  <testcase name="registerLoginAndMe" classname="com.authbase.AuthResourceTest" time="0.4"/>
-  <testcase name="registerAndUpdateProfile" classname="com.authbase.AuthResourceTest" time="0.155"/>
-  <testcase name="registerRejectsWeakPassword" classname="com.authbase.AuthResourceTest" time="0.024"/>
+  <testcase name="publicSettingsAreReadableWithoutAuth" classname="com.authbase.SettingsResourceTest" time="0.021"/>
+  <testcase name="adminCanDisablePublicRegistration" classname="com.authbase.SettingsResourceTest" time="0.179"/>
 </testsuite>

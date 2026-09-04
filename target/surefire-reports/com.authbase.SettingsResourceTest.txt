@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
-Test set: com.authbase.AuthResourceTest
+Test set: com.authbase.SettingsResourceTest
 -------------------------------------------------------------------------------
-Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.520 s -- in com.authbase.AuthResourceTest
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.204 s -- in com.authbase.SettingsResourceTest

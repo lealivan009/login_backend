@@ -30,23 +30,32 @@ public class AuthService {
     private final PasswordPolicy passwordPolicy;
     private final TokenService tokenService;
     private final JwtIssuer jwtIssuer;
+    private final SettingsService settingsService;
 
     public AuthService(
             AuthProperties properties,
             PasswordHasher passwordHasher,
             PasswordPolicy passwordPolicy,
             TokenService tokenService,
-            JwtIssuer jwtIssuer
+            JwtIssuer jwtIssuer,
+            SettingsService settingsService
     ) {
         this.properties = properties;
         this.passwordHasher = passwordHasher;
         this.passwordPolicy = passwordPolicy;
         this.tokenService = tokenService;
         this.jwtIssuer = jwtIssuer;
+        this.settingsService = settingsService;
     }
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
+        if (!settingsService.current().allowPublicRegistration) {
+            throw ApiException.forbidden(
+                    "REGISTRATION_DISABLED",
+                    "El registro público está deshabilitado. Pedile a un administrador que cree tu cuenta."
+            );
+        }
         passwordPolicy.validate(request.password());
 
         String email = User.normalizeEmail(request.email());

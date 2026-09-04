@@ -13,6 +13,7 @@ D:\Proyectos\Proyecto Base login\login_backend\src\main\java\com\authbase\api\dt
 D:\Proyectos\Proyecto Base login\login_backend\src\main\java\com\authbase\api\dto\UpdateProfileRequest.java
 D:\Proyectos\Proyecto Base login\login_backend\src\main\java\com\authbase\api\dto\UpdateSettingsRequest.java
 D:\Proyectos\Proyecto Base login\login_backend\src\main\java\com\authbase\api\dto\UpdateUserRequest.java
+D:\Proyectos\Proyecto Base login\login_backend\src\main\java\com\authbase\api\dto\UserPageResponse.java
 D:\Proyectos\Proyecto Base login\login_backend\src\main\java\com\authbase\api\dto\UserResponse.java
 D:\Proyectos\Proyecto Base login\login_backend\src\main\java\com\authbase\api\SettingsResource.java
 D:\Proyectos\Proyecto Base login\login_backend\src\main\java\com\authbase\api\UserResource.java

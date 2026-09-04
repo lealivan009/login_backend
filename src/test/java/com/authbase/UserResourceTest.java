@@ -68,7 +68,17 @@ class UserResourceTest {
                 .get("/api/users")
                 .then()
                 .statusCode(200)
-                .body("email", hasItem(email));
+                .body("items.email", hasItem(email));
+
+        given()
+                .header("Authorization", "Bearer " + adminToken)
+                .queryParam("q", email)
+                .when()
+                .get("/api/users")
+                .then()
+                .statusCode(200)
+                .body("total", equalTo(1))
+                .body("items[0].email", equalTo(email));
 
         given()
                 .header("Authorization", "Bearer " + adminToken)
@@ -137,7 +147,7 @@ class UserResourceTest {
                 .get("/api/users")
                 .then()
                 .statusCode(200)
-                .body("email", not(hasItem(email)));
+                .body("items.email", not(hasItem(email)));
 
         given()
                 .contentType(ContentType.JSON)

@@ -3,24 +3,26 @@ package com.authbase.api;
 import com.authbase.api.dto.CreateUserRequest;
 import com.authbase.api.dto.MessageResponse;
 import com.authbase.api.dto.UpdateUserRequest;
+import com.authbase.api.dto.UserPageResponse;
 import com.authbase.api.dto.UserResponse;
+import com.authbase.domain.Role;
 import com.authbase.service.UserService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-
-import java.util.List;
 
 @Path("/api/users")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -38,9 +40,15 @@ public class UserResource {
     }
 
     @GET
-    @Operation(summary = "Listar usuarios")
-    public List<UserResponse> list() {
-        return userService.list();
+    @Operation(summary = "Listar usuarios (búsqueda y paginación)")
+    public UserPageResponse list(
+            @QueryParam("q") String q,
+            @QueryParam("page") @DefaultValue("0") int page,
+            @QueryParam("size") @DefaultValue("10") int size,
+            @QueryParam("enabled") Boolean enabled,
+            @QueryParam("role") Role role
+    ) {
+        return userService.list(q, page, size, enabled, role);
     }
 
     @GET

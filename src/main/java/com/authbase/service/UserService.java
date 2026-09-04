@@ -2,6 +2,7 @@ package com.authbase.service;
 
 import com.authbase.api.dto.CreateUserRequest;
 import com.authbase.api.dto.UpdateUserRequest;
+import com.authbase.api.dto.UserPageResponse;
 import com.authbase.api.dto.UserResponse;
 import com.authbase.domain.RefreshToken;
 import com.authbase.domain.Role;
@@ -14,10 +15,15 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @ApplicationScoped
 public class UserService {
+
+    private static final int DEFAULT_PAGE_SIZE = 10;
+    private static final int MAX_PAGE_SIZE = 100;
 
     private final PasswordHasher passwordHasher;
     private final PasswordPolicy passwordPolicy;
@@ -27,10 +33,43 @@ public class UserService {
         this.passwordPolicy = passwordPolicy;
     }
 
-    public List<UserResponse> list() {
-        return User.<User>find("deletedAt is null ORDER BY createdAt DESC").list().stream()
+    public UserPageResponse list(String q, int page, int size, Boolean enabled, Role role) {
+        int safePage = Math.max(0, page);
+        int safeSize = size <= 0 ? DEFAULT_PAGE_SIZE : Math.min(size, MAX_PAGE_SIZE);
+
+        StringBuilder where = new StringBuilder("deletedAt is null");
+        Map<String, Object> params = new HashMap<>();
+
+        if (q != null && !q.isBlank()) {
+            where.append("""
+                     and (
+                        lower(email) like :q
+                        or lower(firstName) like :q
+                        or lower(lastName) like :q
+                        or lower(coalesce(phone, '')) like :q
+                     )
+                    """);
+            params.put("q", "%" + q.trim().toLowerCase() + "%");
+        }
+        if (enabled != null) {
+            where.append(" and enabled = :enabled");
+            params.put("enabled", enabled);
+        }
+        if (role != null) {
+            where.append(" and role = :role");
+            params.put("role", role);
+        }
+
+        String filter = where.toString();
+        long total = User.count(filter, params);
+        List<UserResponse> items = User.<User>find(filter + " ORDER BY lower(lastName) ASC, lower(firstName) ASC", params)
+                .page(safePage, safeSize)
+                .list()
+                .stream()
                 .map(UserResponse::from)
                 .toList();
+
+        return UserPageResponse.of(items, total, safePage, safeSize);
     }
 
     public UserResponse get(String id) {
